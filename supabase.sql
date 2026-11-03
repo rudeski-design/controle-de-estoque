@@ -1,6 +1,6 @@
 -- Rode no Supabase: SQL Editor > New query > Run
 create table public.admins (email text primary key);
-insert into public.admins values ('voce@seuemail.com');  -- TROQUE pelo seu e-mail de login
+insert into public.admins values ('fernando@intconsultoria.ia.br');  -- TROQUE pelo seu e-mail de login
 
 create table public.products (
   id uuid primary key default gen_random_uuid(),

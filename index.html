@@ -107,7 +107,7 @@ input,select,textarea{font-size:16px}
 <body>
 <header><div class="in top">
   <div class="brand"><div class="logo"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="#062224" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Logo"><path d="M16 3.5 28 9.5v13L16 28.5 4 22.5v-13z"/><path d="M4 9.5l12 6 12-6M16 15.5v13"/><circle cx="16" cy="17" r="6.5" fill="#46c6c9"/><path d="M16 13.5v7M12.5 17h7"/></svg></div><div><h1>Almoxarifado de insumos</h1><div class="sub">Controle de entradas e saídas</div></div></div>
-  <div class="who" id="who"><label for="me">Responsável (seu nome)</label><input id="me" list="nl" maxlength="40" placeholder="Digite seu nome" autocomplete="off"><datalist id="nl"></datalist><a href="#" id="out" class="hide" style="font-size:12px;color:#9fe3e5;text-decoration:none;align-self:flex-end">Sair</a></div>
+  <div class="who" id="who"><label for="me">Responsável</label><input id="me" list="nl" maxlength="40" placeholder="Digite seu nome" autocomplete="off"><datalist id="nl"></datalist><a href="#" id="out" class="hide" style="font-size:12px;color:#9fe3e5;text-decoration:none;align-self:flex-end">Sair</a></div>
 </div></header>
 <main>
   <div id="st"></div>
@@ -166,7 +166,7 @@ input,select,textarea{font-size:16px}
   </section>
 </main>
 
-<div id="lg" style="position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:50;padding:16px"><div class="card" style="width:min(360px,100%);margin:0"><b>Entrar no almoxarifado</b><label class="l" style="margin-top:12px">E-mail</label><input id="le" type="email" autocomplete="username"><label class="l" style="margin-top:12px">Senha</label><input id="lp" type="password" autocomplete="current-password"><button class="pri" id="lb" style="width:100%;margin-top:16px">Entrar</button><div id="lm" class="msg"></div></div></div>
+<div id="lg" style="position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:50;padding:16px"><div class="card" style="width:min(360px,100%);margin:0"><b>Entrar no almoxarifado</b><label class="l" style="margin-top:12px">E-mail</label><input id="le" type="email" autocomplete="username"><label class="l" style="margin-top:12px">Senha</label><input id="lp" type="password" autocomplete="current-password"><label class="l" style="margin-top:12px">Seu nome <span class="mut">(obrigatório no primeiro acesso)</span></label><input id="ln" maxlength="40" autocomplete="name" placeholder="Ex.: Maria Silva"><button class="pri" id="lb" style="width:100%;margin-top:16px">Entrar</button><div id="lm" class="msg"></div></div></div>
 <script>
 var S={p:[],m:[],names:{}},db=null,usr=null,uid=null,canEdit=false,kind="out",dl=null;
 var $=function(s){return document.querySelector(s)};
@@ -174,8 +174,8 @@ function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return
 function msg(id,t,ok){var e=$(id);e.textContent=t;e.className="msg "+(ok?"o":"e")}
 function status(t){var e=$("#st");e.textContent=t;e.style.display=t?"block":"none"}
 function saveLocal(){try{localStorage.setItem("estoque-cache",JSON.stringify({p:S.p,m:S.m.slice(0,500)}))}catch(e){}}
-function loadLocal(){try{var c=JSON.parse(localStorage.getItem("estoque-cache"));if(c){S.p=c.p||[];S.m=c.m||[]}var n=localStorage.getItem("estoque-nome");if(n)$("#me").value=n}catch(e){}}
-$("#me").oninput=function(){$("#who").classList.remove("err");try{localStorage.setItem("estoque-nome",this.value.trim())}catch(e){}};
+function loadLocal(){try{var c=JSON.parse(localStorage.getItem("estoque-cache"));if(c){S.p=c.p||[];S.m=c.m||[]}localStorage.removeItem("estoque-nome")}catch(e){}}
+$("#me").oninput=function(){$("#who").classList.remove("err")};
 function stock(){var s={};S.m.forEach(function(x){s[x.pid]=(s[x.pid]||0)+(x.type==="in"?x.qty:-x.qty)});return s}
 function nameOf(id){var p=S.p.find(function(x){return x.id===id});return p?p.name:"(removido)"}
 function who(x){return x.by||S.names[x.uid]||"—"}
@@ -276,25 +276,32 @@ db={collection:function(t){return{
 async function load(t){var x=await sb.from(t).select("*").limit(10000);if(x.error)throw x.error;return x.data.map(function(r){return fromRow(t,r)})}
 async function refresh(){try{S.p=await load("products");S.m=await load("moves");saveLocal();status("");render();names()}catch(e){status("Sem conexão: mostrando a cópia local.")}}
 async function start(u){
+  var nome=(u.user_metadata&&u.user_metadata.nome)||pn;
+  if(!nome){started=false;await sb.auth.signOut();msg("#lm","No primeiro acesso, informe seu nome no campo indicado.",false);return}
+  if(!(u.user_metadata&&u.user_metadata.nome))sb.auth.updateUser({data:{nome:nome}}).catch(function(){});
+  pn="";$("#me").value=nome;$("#me").readOnly=true;
   uid=u.id;var a=await sb.from("admins").select("email").limit(1);
   canEdit=!a.error&&!!a.data&&a.data.length>0;
   $("#tadm").classList.toggle("hide",!canEdit);$("#seg").classList.toggle("hide",!canEdit);if(!canEdit)setKind("out");
-  if(!$("#me").value)$("#me").value=(u.email||"").split("@")[0];
+  
   $("#lg").classList.add("hide");$("#out").classList.remove("hide");
   await refresh();
   sb.channel("estoque").on("postgres_changes",{event:"*",schema:"public",table:"products"},sched).on("postgres_changes",{event:"*",schema:"public",table:"moves"},sched).subscribe();
   document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh()});
   addEventListener("online",refresh);
 }
-$("#lb").onclick=async function(){var x=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});if(x.error)msg("#lm","E-mail ou senha incorretos.",false)};
+$("#lb").onclick=async function(){pn=$("#ln").value.trim();var x=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});if(x.error)msg("#lm","E-mail ou senha incorretos.",false)};
 $("#lp").onkeydown=function(e){if(e.key==="Enter")$("#lb").click()};
-$("#out").onclick=function(e){e.preventDefault();sb.auth.signOut()};
+$("#ln").onkeydown=$("#lp").onkeydown;
+$("#out").onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){$("#le").value="";$("#lm").textContent=""})};
+var pn="";
+function resetUI(){pn="";$("#me").value="";$("#me").readOnly=false;$("#lp").value="";$("#ln").value="";$("#mp").value="";$("#mq").value="";$("#mo").value="";$("#mm").textContent="";$("#who").classList.remove("err");status("");setKind("out");tab("est");try{localStorage.removeItem("estoque-nome")}catch(e){}}
 function init(){
   loadLocal();render();
   if(!sb||!CFG.url||CFG.url.indexOf("COLE")===0){$("#lg").classList.add("hide");status("Preencha o arquivo config.js com a URL e a chave do Supabase.");return}
   sb.auth.onAuthStateChange(function(ev,s){
     if(s&&s.user){if(!started){started=true;setTimeout(function(){start(s.user)},0)}}
-    else{started=false;uid=null;canEdit=false;try{localStorage.removeItem("estoque-cache")}catch(e){}S.p=[];S.m=[];render();$("#out").classList.add("hide");$("#tadm").classList.add("hide");$("#lg").classList.remove("hide")}
+    else{started=false;uid=null;canEdit=false;resetUI();try{localStorage.removeItem("estoque-cache")}catch(e){}S.p=[];S.m=[];render();$("#out").classList.add("hide");$("#tadm").classList.add("hide");$("#lg").classList.remove("hide")}
   });
 }
 if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});

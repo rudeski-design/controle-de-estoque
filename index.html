@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0c3b3f">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Estoque">
+<script src="/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<title>Almoxarifado – Insumos Hospitalares</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f3;--card:#fff;--tx:#14262b;--mut:#5f7479;--bd:#d6e0e1;--ac:#0a6c70;--acx:#fff;--hd:#0c3b3f;--ok:#1f8a52;--okbg:#e4f4ea;--warn:#b06a00;--warnbg:#fff1d6;--bad:#c2372b;--badbg:#fde8e5;--sh:0 1px 2px rgba(10,40,45,.06),0 4px 14px rgba(10,40,45,.05);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1a1c;--card:#142528;--tx:#e6f0f0;--mut:#8fa8ac;--bd:#254046;--ac:#46c6c9;--acx:#062224;--hd:#081315;--ok:#6fd49a;--okbg:#14301f;--warn:#ffc266;--warnbg:#3a2a10;--bad:#ff8a7a;--badbg:#3a1c19;--sh:none}}
+:root[data-theme="dark"]{--bg:#0d1a1c;--card:#142528;--tx:#e6f0f0;--mut:#8fa8ac;--bd:#254046;--ac:#46c6c9;--acx:#062224;--hd:#081315;--ok:#6fd49a;--okbg:#14301f;--warn:#ffc266;--warnbg:#3a2a10;--bad:#ff8a7a;--badbg:#3a1c19;--sh:none}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit;color:var(--tx)}
+header{background:var(--hd);color:#eaf6f6;padding:18px 16px 56px}
+.in{max-width:980px;margin:0 auto}
+.top{display:flex;gap:14px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:40px;height:40px;border-radius:10px;background:#46c6c9;display:grid;place-items:center;color:#062224;font-size:24px;font-weight:600}
+h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.01em}
+.sub{font-size:12.5px;opacity:.75}
+.who{display:flex;flex-direction:column;gap:3px;min-width:210px}
+.who label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.who input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:9px;padding:9px 11px}
+.who input::placeholder{color:rgba(255,255,255,.55)}
+.who.err input{border-color:#ff8a7a;background:rgba(255,138,122,.18)}
+main{max-width:980px;margin:-40px auto 0;padding:0 16px 40px}
+#st{font-size:13px;padding:8px 12px;border-radius:10px;background:var(--warnbg);color:var(--warn);margin-bottom:12px;display:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--bd)}
+.stat span{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.stat b{display:block;font:600 26px "IBM Plex Mono",monospace;margin-top:2px}
+.stat.w b{color:var(--warn)}.stat.z b{color:var(--bad)}
+nav{display:flex;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:4px;margin-bottom:14px;box-shadow:var(--sh)}
+nav button{flex:1;background:none;border:0;border-radius:9px;padding:10px 6px;cursor:pointer;color:var(--mut);font-weight:500}
+nav button.on{background:var(--ac);color:var(--acx);font-weight:600}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:10px 11px}
+input:focus,textarea:focus{outline:2px solid var(--ac);outline-offset:1px}
+label.l{font-size:12px;color:var(--mut);display:block;margin-bottom:4px;font-weight:500}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>*{flex:1;min-width:130px}
+.row>.sm{flex:0 0 auto;min-width:0}
+button.pri{background:var(--ac);color:var(--acx);border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer}
+button.sec{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.it{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--ok);border-radius:12px;padding:12px 14px;box-shadow:var(--sh)}
+.it.low{border-left-color:var(--warn)}.it.zero{border-left-color:var(--bad)}
+.it .h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.it b.n{font-weight:600}
+.it .u{font-size:12px;color:var(--mut)}
+.it .q{font:600 26px "IBM Plex Mono",monospace;line-height:1}
+.bar{height:6px;background:var(--bd);border-radius:9px;margin:10px 0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:9px}
+.low .bar i{background:var(--warn)}.zero .bar i{background:var(--bad)}
+.act{display:flex;gap:8px;align-items:center}
+.act button{flex:1;border-radius:8px;padding:8px;cursor:pointer;font-weight:600;border:1px solid var(--bd);background:var(--bg)}
+.act .o{color:var(--bad)}.act .i{color:var(--ok)}
+.act input.mn{width:64px;flex:0 0 64px;padding:6px 8px;text-align:right}
+.b{padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.b.ok{background:var(--okbg);color:var(--ok)}.b.low{background:var(--warnbg);color:var(--warn)}.b.zero{background:var(--badbg);color:var(--bad)}
+.seg{display:flex;gap:8px;margin-bottom:14px}
+.seg button{flex:1;padding:12px;border-radius:10px;border:2px solid var(--bd);background:var(--card);cursor:pointer;font-weight:600}
+.seg button.on[data-k="out"]{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.seg button.on[data-k="in"]{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.tbl{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+td.q,th.q{text-align:right;font-family:"IBM Plex Mono",monospace}
+.t-in{color:var(--ok);font-weight:600}.t-out{color:var(--bad);font-weight:600}
+.msg{margin-top:10px;font-size:13.5px}.msg.e{color:var(--bad)}.msg.o{color:var(--ok)}
+.hide{display:none!important}
+textarea{min-height:100px}
+.mut{color:var(--mut);font-size:13px}
+.pr{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.who{width:100%}
+header{padding:14px 14px 50px}
+main{padding:0 12px 96px}
+nav{position:fixed;left:0;right:0;bottom:0;margin:0;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:20}
+nav button{padding:12px 2px;font-size:13px}
+input,select,textarea{font-size:16px}
+.grid{grid-template-columns:1fr}
+.act button{padding:12px}
+.seg button{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="in top">
+  <div class="brand"><div class="logo"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="#062224" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Logo"><path d="M16 3.5 28 9.5v13L16 28.5 4 22.5v-13z"/><path d="M4 9.5l12 6 12-6M16 15.5v13"/><circle cx="16" cy="17" r="6.5" fill="#46c6c9"/><path d="M16 13.5v7M12.5 17h7"/></svg></div><div><h1>Almoxarifado de insumos</h1><div class="sub">Controle de entradas e saídas</div></div></div>
+  <div class="who" id="who"><label for="me">Responsável (seu nome)</label><input id="me" list="nl" maxlength="40" placeholder="Digite seu nome" autocomplete="off"><datalist id="nl"></datalist><a href="#" id="out" class="hide" style="font-size:12px;color:#9fe3e5;text-decoration:none;align-self:flex-end">Sair</a></div>
+</div></header>
+<main>
+  <div id="st"></div>
+  <div class="stats">
+    <div class="stat"><span>Insumos</span><b id="s1">0</b></div>
+    <div class="stat w"><span>Abaixo do mín.</span><b id="s2">0</b></div>
+    <div class="stat z"><span>Zerados</span><b id="s3">0</b></div>
+    <div class="stat"><span>Movim. hoje</span><b id="s4">0</b></div>
+  </div>
+  <nav>
+    <button data-t="est" class="on">Estoque</button>
+    <button data-t="mov">Movimentar</button>
+    <button data-t="his">Histórico</button>
+    <button data-t="adm" id="tadm" class="hide">Cadastro</button>
+  </nav>
+
+  <section id="est">
+    <div class="card"><div class="row">
+      <div><label class="l">Buscar</label><input id="q" placeholder="Nome do insumo…"></div>
+      <label class="sm mut" style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" id="low" style="width:auto"> Só abaixo do mínimo</label>
+      <button class="sec sm" id="exE">Exportar CSV</button>
+    </div></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="mov" class="hide"><div class="card">
+    <div class="seg" id="seg"><button data-k="out" class="on">− Saída</button><button data-k="in">+ Entrada</button></div>
+    <label class="l">Insumo</label><input id="mp" list="pl" placeholder="Digite para buscar…"><datalist id="pl"></datalist>
+    <div class="row" style="margin-top:12px">
+      <div><label class="l">Quantidade</label><input id="mq" type="number" min="1" step="1" inputmode="numeric"></div>
+      <div style="flex:2"><label class="l">Observação (setor, lote…)</label><input id="mo" maxlength="120"></div>
+    </div>
+    <div style="margin-top:16px"><button class="pri" id="go" style="width:100%">Registrar movimentação</button></div>
+    <div id="mm" class="msg"></div>
+  </div></section>
+
+  <section id="his" class="hide">
+    <div class="card"><button class="sec" id="exH">Exportar histórico CSV</button></div>
+    <div class="card tbl"><table><thead><tr><th>Data</th><th>Insumo</th><th>Tipo</th><th class="q">Qtd.</th><th>Responsável</th><th>Obs.</th></tr></thead><tbody id="hb"></tbody></table></div>
+  </section>
+
+  <section id="adm" class="hide">
+    <div class="card"><b>Novo insumo</b>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:2"><label class="l">Nome</label><input id="an"></div>
+        <div><label class="l">Unidade</label><input id="au" placeholder="un, cx, par…"></div>
+        <div><label class="l">Mínimo</label><input id="am" type="number" min="0" value="0"></div>
+      </div>
+      <div style="margin-top:12px"><button class="pri" id="aa">Adicionar</button></div></div>
+    <div class="card hide" id="ec"><b>Editar insumo</b><div class="row" style="margin-top:10px"><div style="flex:2"><label class="l">Nome</label><input id="en"></div><div><label class="l">Unidade</label><input id="eu"></div><div><label class="l">Mínimo</label><input id="em" type="number" min="0"></div></div><div class="row" style="margin-top:12px"><button class="pri sm" id="es">Salvar</button><button class="sec sm" id="ex">Cancelar</button><button class="sec sm" id="ed"></button></div><div id="em2" class="msg"></div></div>
+    <div class="card"><b>Insumos cadastrados</b><input id="pq" placeholder="Buscar para editar…" style="margin:10px 0"><div id="pls"></div></div>
+    <div class="card"><b>Importar lista</b>
+      <div class="mut">Uma linha por insumo: nome;unidade;mínimo</div>
+      <textarea id="bl" style="margin-top:8px" placeholder="Luva de procedimento M;cx;20&#10;Seringa 10 mL;un;100"></textarea>
+      <div style="margin-top:12px"><button class="pri" id="bb">Importar</button></div><div id="am2" class="msg"></div></div>
+  </section>
+</main>
+
+<div id="lg" style="position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:50;padding:16px"><div class="card" style="width:min(360px,100%);margin:0"><b>Entrar no almoxarifado</b><label class="l" style="margin-top:12px">E-mail</label><input id="le" type="email" autocomplete="username"><label class="l" style="margin-top:12px">Senha</label><input id="lp" type="password" autocomplete="current-password"><button class="pri" id="lb" style="width:100%;margin-top:16px">Entrar</button><div id="lm" class="msg"></div></div></div>
+<script>
+var S={p:[],m:[],names:{}},db=null,usr=null,uid=null,canEdit=false,kind="out",dl=null;
+var $=function(s){return document.querySelector(s)};
+function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function msg(id,t,ok){var e=$(id);e.textContent=t;e.className="msg "+(ok?"o":"e")}
+function status(t){var e=$("#st");e.textContent=t;e.style.display=t?"block":"none"}
+function saveLocal(){try{localStorage.setItem("estoque-cache",JSON.stringify({p:S.p,m:S.m.slice(0,500)}))}catch(e){}}
+function loadLocal(){try{var c=JSON.parse(localStorage.getItem("estoque-cache"));if(c){S.p=c.p||[];S.m=c.m||[]}var n=localStorage.getItem("estoque-nome");if(n)$("#me").value=n}catch(e){}}
+$("#me").oninput=function(){$("#who").classList.remove("err");try{localStorage.setItem("estoque-nome",this.value.trim())}catch(e){}};
+function stock(){var s={};S.m.forEach(function(x){s[x.pid]=(s[x.pid]||0)+(x.type==="in"?x.qty:-x.qty)});return s}
+function nameOf(id){var p=S.p.find(function(x){return x.id===id});return p?p.name:"(removido)"}
+function who(x){return x.by||S.names[x.uid]||"—"}
+function fmt(t){var d=new Date(t);return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+function tab(t){document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x.dataset.t===t)});["est","mov","his","adm"].forEach(function(k){$("#"+k).classList.toggle("hide",k!==t)})}
+function setKind(k){kind=k;document.querySelectorAll("#seg button").forEach(function(x){x.classList.toggle("on",x.dataset.k===k)})}
+
+function render(){
+  var s=stock(),q=$("#q").value.toLowerCase(),lo=$("#low").checked;
+  var list=S.p.filter(function(p){return p.active!==false}).sort(function(a,b){return a.name.localeCompare(b.name,"pt-BR")});
+  var low=0,zero=0,h="";
+  list.forEach(function(p){
+    var qt=s[p.id]||0,mn=p.min||0,st=qt<=0?"zero":(qt<=mn?"low":"ok");
+    if(st==="zero")zero++;else if(st==="low")low++;
+    if(q&&p.name.toLowerCase().indexOf(q)<0)return;
+    if(lo&&st==="ok")return;
+    var pc=Math.max(3,Math.min(100,Math.round(qt/Math.max(mn*2,1)*100)));
+    h+="<div class='it "+st+"'><div class='h'><div><b class='n'>"+esc(p.name)+"</b><div class='u'>"+esc(p.unit||"un")+" · mín. "+mn+"</div></div><div style='text-align:right'><div class='q'>"+qt+"</div><span class='b "+st+"'>"+(st==="zero"?"Zerado":st==="low"?"Baixo":"OK")+"</span></div></div>"+
+      "<div class='bar'><i style='width:"+(qt>0?pc:0)+"%'></i></div><div class='act'><button class='o' data-a='out' data-id='"+esc(p.id)+"'>− Saída</button><button class='i' data-a='in' data-id='"+esc(p.id)+"'>+ Entrada</button>"+
+      (canEdit?"<button data-a='edit' title='Editar' data-id='"+esc(p.id)+"' style='flex:0 0 44px'>✎</button><input class='mn' type='number' min='0' title='Estoque mínimo' data-id='"+esc(p.id)+"' value='"+mn+"'>":"")+"</div></div>";
+  });
+  $("#grid").innerHTML=h||"<div class='card mut'>Nenhum insumo encontrado."+(canEdit?" Use a aba Cadastro para importar sua lista.":"")+"</div>";
+  var pq=$("#pq").value.toLowerCase();
+  $("#pls").innerHTML=S.p.slice().sort(function(a,b){return a.name.localeCompare(b.name,"pt-BR")}).filter(function(p){return !pq||p.name.toLowerCase().indexOf(pq)>=0}).map(function(p){return "<div class='pr'><div><b>"+esc(p.name)+"</b> <span class='mut'>"+esc(p.unit||"un")+" · mín. "+(p.min||0)+"</span>"+(p.active===false?" <span class='b zero'>Inativo</span>":"")+"</div><button class='sec' data-id='"+esc(p.id)+"'>Editar</button></div>"}).join("")||"<div class='mut'>Nenhum insumo.</div>";
+  var d0=new Date();d0.setHours(0,0,0,0);
+  $("#s1").textContent=list.length;$("#s2").textContent=low;$("#s3").textContent=zero;
+  $("#s4").textContent=S.m.filter(function(x){return x.at>=d0.getTime()}).length;
+  $("#pl").innerHTML=list.map(function(p){return "<option value=\""+esc(p.name)+"\">"}).join("");
+  var nm={};S.m.forEach(function(x){if(x.by)nm[x.by]=1});
+  $("#nl").innerHTML=Object.keys(nm).map(function(n){return "<option value=\""+esc(n)+"\">"}).join("");
+  var hs=S.m.slice().sort(function(a,b){return b.at-a.at}).slice(0,150);
+  $("#hb").innerHTML=hs.map(function(x){return "<tr><td>"+fmt(x.at)+"</td><td>"+esc(nameOf(x.pid))+"</td><td class='t-"+x.type+"'>"+(x.type==="in"?"Entrada":"Saída")+"</td><td class='q'>"+x.qty+"</td><td>"+esc(who(x))+"</td><td>"+esc(x.note||"")+"</td></tr>"}).join("")||"<tr><td colspan='6' class='mut'>Sem movimentações.</td></tr>";
+}
+
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){tab(b.dataset.t)}});
+document.querySelectorAll("#seg button").forEach(function(b){b.onclick=function(){setKind(b.dataset.k)}});
+$("#q").oninput=render;$("#low").onchange=render;
+$("#grid").onclick=function(e){var b=e.target.closest("button[data-a]");if(!b)return;
+  var p=S.p.find(function(x){return x.id===b.dataset.id});if(!p)return;
+  if(b.dataset.a==="edit"){editP(p.id);window.scrollTo(0,0);return}
+  setKind(b.dataset.a);$("#mp").value=p.name;tab("mov");$("#mq").focus();window.scrollTo(0,0)};
+$("#grid").onchange=function(e){var i=e.target;if(i.classList.contains("mn")&&db){db.collection("products").doc(i.dataset.id).update({min:Math.max(0,parseInt(i.value)||0)}).catch(function(){status("Não foi possível salvar o mínimo.")})}};
+
+$("#go").onclick=async function(){
+  var by=$("#me").value.trim();
+  if(!by){$("#who").classList.add("err");$("#me").focus();window.scrollTo(0,0);return msg("#mm","Informe o nome do responsável no topo da página.",false)}
+  if(!db)return msg("#mm","Sem conexão com a nuvem. Tente novamente.",false);
+  var nm=$("#mp").value.trim(),p=S.p.find(function(x){return x.name===nm&&x.active!==false}),q=parseInt($("#mq").value);
+  if(!p)return msg("#mm","Escolha um insumo da lista.",false);
+  if(!(q>0))return msg("#mm","Informe uma quantidade válida.",false);
+  var cur=stock()[p.id]||0;
+  if(kind==="out"&&q>cur)return msg("#mm","Saída maior que o estoque ("+cur+" disponíveis).",false);
+  try{
+    await db.collection("moves").add({pid:p.id,type:kind,qty:q,by:by,uid:uid,at:Date.now(),note:$("#mo").value.trim()});
+    msg("#mm",(kind==="in"?"Entrada":"Saída")+" registrada: "+q+" × "+p.name+" ("+by+")",true);
+    $("#mq").value="";$("#mo").value="";$("#mp").value="";
+  }catch(e){msg("#mm","Falha ao salvar: "+(e&&e.message||"erro"),false)}
+};
+
+$("#aa").onclick=async function(){
+  var n=$("#an").value.trim();if(!n||!db)return;
+  try{await db.collection("products").add({name:n,unit:$("#au").value.trim(),min:Math.max(0,parseInt($("#am").value)||0),active:true});$("#an").value="";$("#au").value=""}catch(e){status("Falha ao adicionar.")}
+};
+$("#bb").onclick=async function(){
+  if(!db)return;var ls=$("#bl").value.split("\n"),ok=0;
+  for(var i=0;i<ls.length;i++){var c=ls[i].split(";");var n=(c[0]||"").trim();if(!n)continue;
+    try{await db.collection("products").add({name:n,unit:(c[1]||"").trim(),min:Math.max(0,parseInt(c[2])||0),active:true});ok++}catch(e){break}}
+  msg("#am2",ok+" insumos importados.",true);$("#bl").value="";
+};
+
+function csv(rows){return "\ufeff"+rows.map(function(r){return r.map(function(v){v=String(v==null?"":v);return /[;"\n]/.test(v)?"\""+v.replace(/"/g,"\"\"")+"\"":v}).join(";")}).join("\n")}
+async function save(name,rows){if(!dl)return status("Exportação indisponível neste modo.");try{await dl.save({filename:name,data:csv(rows)})}catch(e){}}
+$("#exE").onclick=function(){var s=stock();save("estoque.csv",[["Insumo","Quantidade","Unidade","Mínimo"]].concat(S.p.filter(function(p){return p.active!==false}).map(function(p){return [p.name,s[p.id]||0,p.unit||"",p.min||0]})))};
+$("#exH").onclick=function(){save("historico.csv",[["Data","Insumo","Tipo","Quantidade","Responsável","Observação"]].concat(S.m.slice().sort(function(a,b){return b.at-a.at}).map(function(x){return [fmt(x.at),nameOf(x.pid),x.type==="in"?"Entrada":"Saída",x.qty,who(x),x.note||""]})))};
+
+var cur=null;
+function editP(id){var p=S.p.find(function(x){return x.id===id});if(!p)return;cur=p;tab("adm");$("#ec").classList.remove("hide");$("#en").value=p.name;$("#eu").value=p.unit||"";$("#em").value=p.min||0;$("#ed").textContent=p.active===false?"Reativar":"Desativar";msg("#em2","",true);$("#ec").scrollIntoView()}
+function closeEd(){cur=null;$("#ec").classList.add("hide")}
+$("#ex").onclick=closeEd;
+$("#es").onclick=async function(){if(!cur||!db)return;var n=$("#en").value.trim();if(!n)return msg("#em2","Informe o nome.",false);try{await db.collection("products").doc(cur.id).update({name:n,unit:$("#eu").value.trim(),min:Math.max(0,parseInt($("#em").value)||0)});msg("#em2","Insumo atualizado.",true);setTimeout(closeEd,900)}catch(e){msg("#em2","Falha ao salvar.",false)}};
+$("#ed").onclick=async function(){if(!cur||!db)return;try{await db.collection("products").doc(cur.id).update({active:cur.active===false});closeEd()}catch(e){msg("#em2","Falha ao salvar.",false)}};
+$("#pq").oninput=render;
+$("#pls").onclick=function(e){var b=e.target.closest("button[data-id]");if(b)editP(b.dataset.id)};
+async function names(){
+  if(!usr)return;var ids=[];S.m.forEach(function(x){if(!x.by&&x.uid&&ids.indexOf(x.uid)<0&&!S.names[x.uid])ids.push(x.uid)});
+  if(!ids.length)return;try{var r=await usr.profiles(ids);ids.forEach(function(i){if(r[i])S.names[i]=r[i].name||""});render()}catch(e){}
+}
+var CFG=window.CFG||{},sb=null,started=false,tm=null;
+try{sb=supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true}})}catch(e){}
+dl={save:async function(o){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([o.data],{type:"text/csv;charset=utf-8"}));a.download=o.filename;document.body.appendChild(a);a.click();a.remove()}};
+function toRow(t,o){var r=Object.assign({},o);delete r.uid;if(t==="moves"){if("by" in r){r.by_name=r.by;delete r.by}}else if("min" in r){r.min_qty=r.min;delete r.min}return r}
+function fromRow(t,r){if(t==="moves")r.by=r.by_name;else r.min=r.min_qty;return r}
+function sched(){clearTimeout(tm);tm=setTimeout(refresh,300)}
+db={collection:function(t){return{
+  add:async function(o){var x=await sb.from(t).insert(toRow(t,o));if(x.error)throw x.error;sched()},
+  doc:function(id){return{update:async function(o){var x=await sb.from(t).update(toRow(t,o)).eq("id",id).select();if(x.error)throw x.error;if(!x.data.length)throw new Error("Sem permissão");sched()}}}
+}}};
+async function load(t){var x=await sb.from(t).select("*").limit(10000);if(x.error)throw x.error;return x.data.map(function(r){return fromRow(t,r)})}
+async function refresh(){try{S.p=await load("products");S.m=await load("moves");saveLocal();status("");render();names()}catch(e){status("Sem conexão: mostrando a cópia local.")}}
+async function start(u){
+  uid=u.id;var a=await sb.from("admins").select("email").limit(1);
+  canEdit=!a.error&&!!a.data&&a.data.length>0;
+  $("#tadm").classList.toggle("hide",!canEdit);
+  if(!$("#me").value)$("#me").value=(u.email||"").split("@")[0];
+  $("#lg").classList.add("hide");$("#out").classList.remove("hide");
+  await refresh();
+  sb.channel("estoque").on("postgres_changes",{event:"*",schema:"public",table:"products"},sched).on("postgres_changes",{event:"*",schema:"public",table:"moves"},sched).subscribe();
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh()});
+  addEventListener("online",refresh);
+}
+$("#lb").onclick=async function(){var x=await sb.auth.signInWithPassword({email:$("#le").value.trim(),password:$("#lp").value});if(x.error)msg("#lm","E-mail ou senha incorretos.",false)};
+$("#lp").onkeydown=function(e){if(e.key==="Enter")$("#lb").click()};
+$("#out").onclick=function(e){e.preventDefault();sb.auth.signOut()};
+function init(){
+  loadLocal();render();
+  if(!sb||!CFG.url||CFG.url.indexOf("COLE")===0){$("#lg").classList.add("hide");status("Preencha o arquivo config.js com a URL e a chave do Supabase.");return}
+  sb.auth.onAuthStateChange(function(ev,s){
+    if(s&&s.user){if(!started){started=true;setTimeout(function(){start(s.user)},0)}}
+    else{started=false;uid=null;canEdit=false;try{localStorage.removeItem("estoque-cache")}catch(e){}S.p=[];S.m=[];render();$("#out").classList.add("hide");$("#tadm").classList.add("hide");$("#lg").classList.remove("hide")}
+  });
+}
+if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});
+init();
+</script>
+</body>
+</html>

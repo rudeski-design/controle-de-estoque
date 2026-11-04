@@ -1,4 +1,4 @@
-const V = "estoque-v6"; // mude para v2, v3… a cada atualização do app
+const V = "estoque-v7"; // mude para v2, v3… a cada atualização do app
 const SHELL = ["/", "/index.html", "/config.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)));

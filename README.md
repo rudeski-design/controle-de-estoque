@@ -10,5 +10,5 @@ Acesse http://localhost:8080
 ## Deploy (GitHub Pages)
 Settings → Pages → Source: `main` / root.
 
-## Privacidade
+## Privacidade app
 
